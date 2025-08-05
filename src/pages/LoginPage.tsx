@@ -24,15 +24,15 @@ export default function LoginPage() {
       }
       
       setIsLoading(true);
-      try {
-        await forgotPassword(email);
+      const { error } = await forgotPassword(email);
+      
+      if (error) {
+        toast.error('Failed to send reset email. Please try again.');
+      } else {
         toast.success('Password reset email sent!');
         setForgotPasswordMode(false);
-      } catch (error) {
-        toast.error('Failed to send reset email. Please try again.');
-      } finally {
-        setIsLoading(false);
       }
+      setIsLoading(false);
       return;
     }
 
@@ -42,26 +42,30 @@ export default function LoginPage() {
     }
 
     setIsLoading(true);
-    try {
-      await login(email, password);
+    const { error } = await login(email, password);
+    
+    if (error) {
+      if (error.message?.includes('Invalid login credentials')) {
+        toast.error('Invalid email or password');
+      } else if (error.message?.includes('Email not confirmed')) {
+        toast.error('Please check your email and click the confirmation link');
+      } else {
+        toast.error(error.message || 'Login failed');
+      }
+    } else {
       toast.success('Welcome back!');
-    } catch (error) {
-      toast.error('Invalid email or password');
-    } finally {
-      setIsLoading(false);
     }
+    setIsLoading(false);
   };
 
   const handleGoogleLogin = async () => {
     setIsLoading(true);
-    try {
-      await loginWithGoogle();
-      toast.success('Welcome back!');
-    } catch (error) {
-      toast.error('Google sign-in failed');
-    } finally {
-      setIsLoading(false);
+    const { error } = await loginWithGoogle();
+    
+    if (error) {
+      toast.error(error.message || 'Google sign-in failed');
     }
+    setIsLoading(false);
   };
 
   return (

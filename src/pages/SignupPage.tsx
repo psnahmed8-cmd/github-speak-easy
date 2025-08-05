@@ -35,26 +35,28 @@ export default function SignupPage() {
     }
 
     setIsLoading(true);
-    try {
-      await signup(name, email, password);
-      toast.success('Account created successfully!');
-    } catch (error) {
-      toast.error('Failed to create account. Please try again.');
-    } finally {
-      setIsLoading(false);
+    const { error } = await signup(name, email, password);
+    
+    if (error) {
+      if (error.message?.includes('User already registered')) {
+        toast.error('An account with this email already exists');
+      } else {
+        toast.error(error.message || 'Failed to create account. Please try again.');
+      }
+    } else {
+      toast.success('Account created successfully! Please check your email to confirm your account.');
     }
+    setIsLoading(false);
   };
 
   const handleGoogleSignup = async () => {
     setIsLoading(true);
-    try {
-      await loginWithGoogle();
-      toast.success('Account created successfully!');
-    } catch (error) {
-      toast.error('Google sign-up failed');
-    } finally {
-      setIsLoading(false);
+    const { error } = await loginWithGoogle();
+    
+    if (error) {
+      toast.error(error.message || 'Google sign-up failed');
     }
+    setIsLoading(false);
   };
 
   return (
