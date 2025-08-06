@@ -39,21 +39,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         setSession(session);
         
         if (session?.user) {
-          // Fetch user profile from our profiles table
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-          
-          if (profile) {
-            setUser(profile);
-            setIsAuthenticated(true);
-          }
+          // Defer profile fetch to avoid deadlock
+          setTimeout(() => {
+            supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .single()
+              .then(({ data: profile }) => {
+                if (profile) {
+                  setUser(profile);
+                  setIsAuthenticated(true);
+                } else {
+                  // Create basic user profile from auth data
+                  setUser({
+                    id: session.user.id,
+                    name: session.user.user_metadata?.name || '',
+                    email: session.user.email || ''
+                  });
+                  setIsAuthenticated(true);
+                }
+              });
+          }, 0);
         } else {
           setUser(null);
           setIsAuthenticated(false);
