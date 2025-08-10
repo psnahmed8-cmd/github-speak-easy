@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
+import { authApi } from '@/lib/api';
 
 interface UserProfile {
   id: string;
@@ -12,7 +11,6 @@ interface UserProfile {
 
 interface AuthContextType {
   user: UserProfile | null;
-  session: Session | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<{ error?: any }>;
   signup: (name: string, email: string, password: string) => Promise<{ error?: any }>;
@@ -33,116 +31,69 @@ export function useAuth() {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        
-        if (session?.user) {
-          // Defer profile fetch to avoid deadlock
-          setTimeout(() => {
-            supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', session.user.id)
-              .single()
-              .then(({ data: profile }) => {
-                if (profile) {
-                  setUser(profile);
-                  setIsAuthenticated(true);
-                } else {
-                  // Create basic user profile from auth data
-                  setUser({
-                    id: session.user.id,
-                    name: session.user.user_metadata?.name || '',
-                    email: session.user.email || ''
-                  });
-                  setIsAuthenticated(true);
-                }
-              });
-          }, 0);
-        } else {
+    // Check for existing token on mount
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+      // Fetch user profile to verify token is still valid
+      authApi.getProfile()
+        .then((profile) => {
+          setUser(profile);
+          setIsAuthenticated(true);
+        })
+        .catch(() => {
+          // Token is invalid, clear it
+          localStorage.removeItem('auth_token');
           setUser(null);
           setIsAuthenticated(false);
-        }
-      }
-    );
-
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        setSession(session);
-        supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single()
-          .then(({ data: profile }) => {
-            if (profile) {
-              setUser(profile);
-              setIsAuthenticated(true);
-            }
-          });
-      }
-    });
-
-    return () => subscription.unsubscribe();
+        });
+    }
   }, []);
 
   const login = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    return { error };
+    try {
+      const response = await authApi.login(email, password);
+      localStorage.setItem('auth_token', response.token);
+      setUser(response.user);
+      setIsAuthenticated(true);
+      return { error: null };
+    } catch (error: any) {
+      return { error: { message: error.message } };
+    }
   };
 
   const signup = async (name: string, email: string, password: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-    
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: {
-          name: name,
-        }
-      }
-    });
-    return { error };
+    try {
+      const response = await authApi.register(name, email, password);
+      localStorage.setItem('auth_token', response.token);
+      setUser(response.user);
+      setIsAuthenticated(true);
+      return { error: null };
+    } catch (error: any) {
+      return { error: { message: error.message } };
+    }
   };
 
   const loginWithGoogle = async () => {
-    const redirectUrl = `${window.location.origin}/`;
-    
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: redirectUrl,
-      }
-    });
-    return { error };
+    // Google OAuth not implemented in this version
+    return { error: { message: 'Google login not available in this version' } };
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
+    localStorage.removeItem('auth_token');
+    setUser(null);
+    setIsAuthenticated(false);
   };
 
   const forgotPassword = async (email: string) => {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
-    return { error };
+    // Password reset not implemented in this version
+    return { error: { message: 'Password reset not available in this version' } };
   };
 
   const value = {
     user,
-    session,
     isAuthenticated,
     login,
     signup,

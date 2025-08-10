@@ -1,11 +1,11 @@
 import React from 'react';
 import { Upload, FileText, BarChart3, Clock, CheckCircle, ArrowUpRight, Lightbulb, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'wouter';
 
 export default function DashboardOverview() {
   const { user } = useAuth();
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
 
   const stats = [
     {
@@ -48,21 +48,21 @@ export default function DashboardOverview() {
       description: 'Start a new root cause analysis by uploading your data files',
       icon: Upload,
       color: 'bg-blue-600 hover:bg-blue-700',
-      action: () => navigate('/upload'),
+      action: () => setLocation('/upload'),
     },
     {
       title: 'View Analysis Results',
       description: 'Review your previous RCA reports and findings',
       icon: FileText,
       color: 'bg-green-600 hover:bg-green-700',
-      action: () => navigate('/analysis'),
+      action: () => setLocation('/analysis'),
     },
     {
       title: 'Explore Chart Views',
       description: 'Visualize data with Fishbone, Pareto, and other diagrams',
       icon: BarChart3,
       color: 'bg-purple-600 hover:bg-purple-700',
-      action: () => navigate('/charts'),
+      action: () => setLocation('/charts'),
     },
   ];
 

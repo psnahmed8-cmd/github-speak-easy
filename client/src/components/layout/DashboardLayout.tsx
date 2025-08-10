@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation } from 'wouter';
 import { 
   LayoutDashboard, 
   Upload, 
@@ -32,16 +32,15 @@ const navigation = [
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const navigate = useNavigate();
-  const location = useLocation();
+  const [location, setLocation] = useLocation();
   const { user, logout } = useAuth();
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    setLocation('/login');
   };
 
-  const isActive = (href: string) => location.pathname === href;
+  const isActive = (href: string) => location === href;
 
   return (
     <div className="h-screen flex bg-gray-900">
@@ -83,7 +82,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className="flex-1 px-4 flex justify-between items-center">
             <div>
               <h1 className="text-xl font-semibold text-white">
-                {navigation.find(item => item.href === location.pathname)?.name || 'Dashboard'}
+                {navigation.find(item => item.href === location)?.name || 'Dashboard'}
               </h1>
             </div>
             <div className="flex items-center space-x-4">
@@ -138,7 +137,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               <button
                 key={item.name}
                 onClick={() => {
-                  navigate(item.href);
+                  setLocation(item.href);
                   onNavigate?.();
                 }}
                 className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors w-full text-left ${

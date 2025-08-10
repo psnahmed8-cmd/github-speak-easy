@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Route, Switch, Redirect } from "wouter";
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import LoginPage from './pages/LoginPage';
@@ -16,89 +16,89 @@ import HelpDocumentation from './pages/HelpDocumentation';
 // Protected Route component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
+  return isAuthenticated ? <>{children}</> : <Redirect to="/login" />;
 }
 
 // Public Route component (redirect to dashboard if already authenticated)
 function PublicRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
-  return !isAuthenticated ? <>{children}</> : <Navigate to="/dashboard" />;
+  return !isAuthenticated ? <>{children}</> : <Redirect to="/dashboard" />;
 }
 
 const App = () => (
   <AuthProvider>
-    <Router>
-      <div className="min-h-screen bg-gray-900">
-        <Toaster position="top-right" />
-        <Routes>
-          {/* Public routes */}
-          <Route path="/login" element={
-            <PublicRoute>
-              <LoginPage />
-            </PublicRoute>
-          } />
-          <Route path="/signup" element={
-            <PublicRoute>
-              <SignupPage />
-            </PublicRoute>
-          } />
+    <div className="min-h-screen bg-gray-900">
+      <Toaster position="top-right" />
+      <Switch>
+        {/* Public routes */}
+        <Route path="/login">
+          <PublicRoute>
+            <LoginPage />
+          </PublicRoute>
+        </Route>
+        <Route path="/signup">
+          <PublicRoute>
+            <SignupPage />
+          </PublicRoute>
+        </Route>
 
-          {/* Protected routes */}
-          <Route path="/dashboard" element={
-            <ProtectedRoute>
-              <DashboardLayout>
-                <DashboardOverview />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/upload" element={
-            <ProtectedRoute>
-              <DashboardLayout>
-                <UploadData />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/analysis" element={
-            <ProtectedRoute>
-              <DashboardLayout>
-                <AnalysisResults />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/scenarios" element={
-            <ProtectedRoute>
-              <DashboardLayout>
-                <WhatIfScenarios />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/charts" element={
-            <ProtectedRoute>
-              <DashboardLayout>
-                <ChartViews />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/settings" element={
-            <ProtectedRoute>
-              <DashboardLayout>
-                <AccountSettings />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/help" element={
-            <ProtectedRoute>
-              <DashboardLayout>
-                <HelpDocumentation />
-              </DashboardLayout>
-            </ProtectedRoute>
-          } />
+        {/* Protected routes */}
+        <Route path="/dashboard">
+          <ProtectedRoute>
+            <DashboardLayout>
+              <DashboardOverview />
+            </DashboardLayout>
+          </ProtectedRoute>
+        </Route>
+        <Route path="/upload">
+          <ProtectedRoute>
+            <DashboardLayout>
+              <UploadData />
+            </DashboardLayout>
+          </ProtectedRoute>
+        </Route>
+        <Route path="/analysis">
+          <ProtectedRoute>
+            <DashboardLayout>
+              <AnalysisResults />
+            </DashboardLayout>
+          </ProtectedRoute>
+        </Route>
+        <Route path="/scenarios">
+          <ProtectedRoute>
+            <DashboardLayout>
+              <WhatIfScenarios />
+            </DashboardLayout>
+          </ProtectedRoute>
+        </Route>
+        <Route path="/charts">
+          <ProtectedRoute>
+            <DashboardLayout>
+              <ChartViews />
+            </DashboardLayout>
+          </ProtectedRoute>
+        </Route>
+        <Route path="/settings">
+          <ProtectedRoute>
+            <DashboardLayout>
+              <AccountSettings />
+            </DashboardLayout>
+          </ProtectedRoute>
+        </Route>
+        <Route path="/help">
+          <ProtectedRoute>
+            <DashboardLayout>
+              <HelpDocumentation />
+            </DashboardLayout>
+          </ProtectedRoute>
+        </Route>
 
-          {/* Default redirect */}
-          <Route path="/" element={<Navigate to="/dashboard" />} />
-        </Routes>
-      </div>
-    </Router>
+        {/* Default redirect */}
+        <Route path="/">
+          <Redirect to="/dashboard" />
+        </Route>
+      </Switch>
+    </div>
   </AuthProvider>
 );
 
