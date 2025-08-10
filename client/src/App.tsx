@@ -1,7 +1,9 @@
 import React from 'react';
 import { Route, Switch, Redirect } from "wouter";
+import { QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { queryClient } from '@/lib/queryClient';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import DashboardLayout from './components/layout/DashboardLayout';
@@ -12,6 +14,9 @@ import WhatIfScenarios from './pages/WhatIfScenarios';
 import ChartViews from './pages/ChartViews';
 import AccountSettings from './pages/AccountSettings';
 import HelpDocumentation from './pages/HelpDocumentation';
+import IncidentsListPage from './pages/IncidentsListPage';
+import IncidentReportPage from './pages/IncidentReportPage';
+import RCAResultsPage from './pages/RCAResultsPage';
 
 // Protected Route component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -26,10 +31,11 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 }
 
 const App = () => (
-  <AuthProvider>
-    <div className="min-h-screen bg-gray-900">
-      <Toaster position="top-right" />
-      <Switch>
+  <QueryClientProvider client={queryClient}>
+    <AuthProvider>
+      <div className="min-h-screen bg-gray-900">
+        <Toaster position="top-right" />
+        <Switch>
         {/* Public routes */}
         <Route path="/login">
           <PublicRoute>
@@ -48,6 +54,21 @@ const App = () => (
             <DashboardLayout>
               <DashboardOverview />
             </DashboardLayout>
+          </ProtectedRoute>
+        </Route>
+        <Route path="/incidents" nest>
+          <ProtectedRoute>
+            <Route path="/">
+              <DashboardLayout>
+                <IncidentsListPage />
+              </DashboardLayout>
+            </Route>
+            <Route path="/new">
+              <IncidentReportPage />
+            </Route>
+            <Route path="/:id/rca">
+              <RCAResultsPage />
+            </Route>
           </ProtectedRoute>
         </Route>
         <Route path="/upload">
@@ -100,6 +121,7 @@ const App = () => (
       </Switch>
     </div>
   </AuthProvider>
+  </QueryClientProvider>
 );
 
 export default App;

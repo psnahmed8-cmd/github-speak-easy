@@ -44,18 +44,25 @@ export default function DashboardOverview() {
 
   const quickActions = [
     {
+      title: 'Report New Incident',
+      description: 'Start a comprehensive incident investigation with AI-powered RCA',
+      icon: AlertTriangle,
+      color: 'bg-red-600 hover:bg-red-700',
+      action: () => setLocation('/incidents/new'),
+    },
+    {
+      title: 'View All Incidents',
+      description: 'Review and manage your incident reports and RCA results',
+      icon: FileText,
+      color: 'bg-blue-600 hover:bg-blue-700',
+      action: () => setLocation('/incidents'),
+    },
+    {
       title: 'Upload Process Data',
       description: 'Start a new root cause analysis by uploading your data files',
       icon: Upload,
-      color: 'bg-blue-600 hover:bg-blue-700',
-      action: () => setLocation('/upload'),
-    },
-    {
-      title: 'View Analysis Results',
-      description: 'Review your previous RCA reports and findings',
-      icon: FileText,
       color: 'bg-green-600 hover:bg-green-700',
-      action: () => setLocation('/analysis'),
+      action: () => setLocation('/upload'),
     },
     {
       title: 'Explore Chart Views',

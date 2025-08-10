@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { storage } from "./storage";
-import { insertUserSchema, insertAnalysisProjectSchema } from "@shared/schema";
+import { insertUserSchema, insertAnalysisProjectSchema, insertIncidentSchema, insertRcaResultSchema, insertActionItemSchema } from "@shared/schema";
 import { z } from "zod";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
@@ -315,6 +315,248 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Analysis error:', error);
       res.status(500).json({ error: 'Analysis failed' });
+    }
+  });
+
+  // Mock AI Analysis Function
+  const mockAiRcaAnalysis = (incidentData: any) => {
+    return {
+      primaryRootCauses: [
+        {
+          id: '1',
+          description: 'Operator error due to unfamiliar interface',
+          confidence: 'High',
+          evidenceIndicators: [
+            'Interview excerpts, operator training records, UI change logs'
+          ]
+        },
+        {
+          id: '2',
+          description: 'SOP step missed during shift transition',
+          confidence: 'Medium',
+          evidenceIndicators: [
+            'Checklist logs missing confirmations, shift schedule mismatch'
+          ]
+        }
+      ],
+      causalChain: {
+        timeline: [
+          { time: '2024-01-15 08:00', event: 'UI Change → No Operator Retraining', type: 'trigger' },
+          { time: '2024-01-15 08:30', event: 'Misoperation', type: 'failure' },
+          { time: '2024-01-15 08:45', event: 'System Override Failure', type: 'cascade' },
+          { time: '2024-01-15 09:00', event: 'Equipment Shutdown', type: 'outcome' }
+        ],
+        pathway: 'UI Change → No Operator Retraining → Misoperation → System Override Failure → Equipment Shutdown'
+      },
+      recommendedActions: [
+        {
+          id: '1',
+          title: 'Conduct mandatory retraining on new UI interface',
+          description: 'Comprehensive training program for all operators on the updated interface',
+          priority: 'High',
+          responsibleTeam: 'Operations HR',
+          suggestedDeadline: '2 weeks',
+          category: 'Training'
+        },
+        {
+          id: '2',
+          title: 'Update handover SOP to include confirmation step for new UI',
+          description: 'Modify standard operating procedures to include UI confirmation steps',
+          priority: 'Medium',
+          responsibleTeam: 'Process Quality',
+          suggestedDeadline: '1 week',
+          category: 'Process'
+        },
+        {
+          id: '3',
+          title: 'Add system alert for operator activity anomaly post-interface',
+          description: 'Implement automated monitoring for unusual operator behavior after interface changes',
+          priority: 'High',
+          responsibleTeam: 'Engineering',
+          suggestedDeadline: '3 weeks',
+          category: 'Technology'
+        }
+      ],
+      supportingDocuments: [
+        { name: 'Uploaded Incident Report', type: 'incident_report' },
+        { name: 'Maintenance logs (3 entries analyzed)', type: 'maintenance_logs' },
+        { name: 'Interview: Operator A (with tags)', type: 'interview' },
+        { name: 'System event log (CSV, 312 rows processed)', type: 'event_log' },
+        { name: 'Uploaded image: Damaged control panel', type: 'image' }
+      ],
+      riskInsights: {
+        similarIncidents: [
+          {
+            date: '2023-10-15',
+            description: 'Similar incident 3 months ago linked to operator training gap',
+            correlation: 0.85
+          }
+        ],
+        trends: [
+          'Recommend initiating a monthly anomaly trend review',
+          'Pattern detected: Interface changes without immediate training updates'
+        ]
+      },
+      confidenceRating: 87
+    };
+  };
+
+  // Incident Management Routes
+  app.get('/api/incidents', authenticateToken, async (req: any, res) => {
+    try {
+      const incidents = await storage.getUserIncidents(req.user.userId);
+      res.json(incidents);
+    } catch (error) {
+      console.error('Get incidents error:', error);
+      res.status(500).json({ error: 'Failed to fetch incidents' });
+    }
+  });
+
+  app.post('/api/incidents', authenticateToken, async (req: any, res) => {
+    try {
+      const incidentData = insertIncidentSchema.parse({
+        ...req.body,
+        userId: req.user.userId,
+        incidentDate: new Date(req.body.incidentDate)
+      });
+      
+      const incident = await storage.createIncident(incidentData);
+      res.json(incident);
+    } catch (error) {
+      console.error('Create incident error:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: 'Invalid incident data' });
+      }
+      res.status(500).json({ error: 'Failed to create incident' });
+    }
+  });
+
+  app.get('/api/incidents/:id', authenticateToken, async (req: any, res) => {
+    try {
+      const incident = await storage.getIncident(req.params.id);
+      if (!incident) {
+        return res.status(404).json({ error: 'Incident not found' });
+      }
+      
+      if (incident.userId !== req.user.userId) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+      
+      res.json(incident);
+    } catch (error) {
+      console.error('Get incident error:', error);
+      res.status(500).json({ error: 'Failed to fetch incident' });
+    }
+  });
+
+  app.put('/api/incidents/:id', authenticateToken, async (req: any, res) => {
+    try {
+      const existingIncident = await storage.getIncident(req.params.id);
+      if (!existingIncident) {
+        return res.status(404).json({ error: 'Incident not found' });
+      }
+      
+      if (existingIncident.userId !== req.user.userId) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+      
+      const incident = await storage.updateIncident(req.params.id, req.body);
+      res.json(incident);
+    } catch (error) {
+      console.error('Update incident error:', error);
+      res.status(500).json({ error: 'Failed to update incident' });
+    }
+  });
+
+  // AI RCA Analysis Route
+  app.post('/api/incidents/:id/analyze', authenticateToken, async (req: any, res) => {
+    try {
+      const incident = await storage.getIncident(req.params.id);
+      if (!incident) {
+        return res.status(404).json({ error: 'Incident not found' });
+      }
+      
+      if (incident.userId !== req.user.userId) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+      
+      // Update incident status to analyzing
+      await storage.updateIncident(req.params.id, { status: 'analyzing' });
+      
+      // Perform AI analysis (mock implementation)
+      const analysisResults = mockAiRcaAnalysis(incident);
+      
+      // Create RCA result
+      const rcaResult = await storage.createRcaResult({
+        incidentId: incident.id,
+        ...analysisResults
+      });
+      
+      // Create action items
+      const actionItems = [];
+      for (const action of analysisResults.recommendedActions) {
+        const actionItem = await storage.createActionItem({
+          rcaResultId: rcaResult.id,
+          title: action.title,
+          description: action.description,
+          priority: action.priority.toLowerCase(),
+          responsibleTeam: action.responsibleTeam,
+          suggestedDeadline: action.suggestedDeadline
+        });
+        actionItems.push(actionItem);
+      }
+      
+      // Update incident status to completed
+      await storage.updateIncident(req.params.id, { status: 'completed' });
+      
+      res.json({ 
+        rcaResult: { ...rcaResult, actionItems },
+        message: 'RCA analysis completed successfully' 
+      });
+    } catch (error) {
+      console.error('RCA analysis error:', error);
+      res.status(500).json({ error: 'RCA analysis failed' });
+    }
+  });
+
+  // RCA Results Routes
+  app.get('/api/incidents/:id/rca', authenticateToken, async (req: any, res) => {
+    try {
+      const incident = await storage.getIncident(req.params.id);
+      if (!incident) {
+        return res.status(404).json({ error: 'Incident not found' });
+      }
+      
+      if (incident.userId !== req.user.userId) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+      
+      const rcaResult = await storage.getRcaResultByIncidentId(req.params.id);
+      if (!rcaResult) {
+        return res.status(404).json({ error: 'RCA result not found' });
+      }
+      
+      const actionItems = await storage.getActionItemsByRcaResultId(rcaResult.id);
+      
+      res.json({ ...rcaResult, actionItems });
+    } catch (error) {
+      console.error('Get RCA result error:', error);
+      res.status(500).json({ error: 'Failed to fetch RCA result' });
+    }
+  });
+
+  // Action Items Routes
+  app.put('/api/action-items/:id', authenticateToken, async (req: any, res) => {
+    try {
+      const actionItem = await storage.updateActionItem(req.params.id, req.body);
+      if (!actionItem) {
+        return res.status(404).json({ error: 'Action item not found' });
+      }
+      
+      res.json(actionItem);
+    } catch (error) {
+      console.error('Update action item error:', error);
+      res.status(500).json({ error: 'Failed to update action item' });
     }
   });
 

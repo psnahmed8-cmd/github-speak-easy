@@ -12,7 +12,8 @@ import {
   Menu,
   X,
   Zap,
-  User
+  User,
+  AlertTriangle
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -22,6 +23,7 @@ interface DashboardLayoutProps {
 
 const navigation = [
   { name: 'Dashboard Overview', href: '/dashboard', icon: LayoutDashboard },
+  { name: 'Incident Management', href: '/incidents', icon: AlertTriangle },
   { name: 'Upload Process Data', href: '/upload', icon: Upload },
   { name: 'Analysis Results', href: '/analysis', icon: FileText },
   { name: 'What-If Scenarios', href: '/scenarios', icon: GitBranch },

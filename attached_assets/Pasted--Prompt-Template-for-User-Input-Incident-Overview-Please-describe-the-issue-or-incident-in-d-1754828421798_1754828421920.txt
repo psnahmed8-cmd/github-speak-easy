@@ -1,0 +1,103 @@
+💬 Prompt Template for User Input
+🆘 Incident Overview
+“Please describe the issue or incident in detail. Include what happened, when (time & date), where (location or equipment ID), and who was involved or affected. Attach any related files, logs, or evidence.”
+• Free-text field: Incident description
+• Date & Time Picker
+• Location tag or dropdown
+• Affected assets/system ID (dropdown or manual input)
+• Upload: Photos, videos, documents, logs
+📈 System & Operational Data
+“Provide data related to the equipment or systems operating at the time of the incident.”
+• Upload or paste sensor logs (CSV, JSON, etc.)
+• Select equipment/system involved (auto-linked to incident if input above)
+• System operating mode at time of incident (dropdown)
+• Any recent parameter anomalies? (Yes/No + entry)
+🔧 Maintenance & Technical History
+“Share the latest maintenance records, work orders, or known issues related to the involved asset.”
+• Upload: Service logs, repair history
+• Was the equipment overdue for maintenance? (Yes/No)
+• Details of the last intervention (Date, actions taken)
+• Any known past issues with this system?
+👥 Operator & Human Factors
+“Who was working on or near the affected area? Were they trained or qualified for the task?”
+• Select operators from personnel database
+• Training/certification status (if available)
+• Shift time and role during event
+• Upload or add interview records (text, audio)
+• Notes on fatigue, stress, or other human factor considerations
+🌤️ Environmental or External Factors
+“Were there any unusual external conditions?”
+• Weather data at time of incident (auto-fetch or manual input)
+• Any nearby projects or disturbances?
+• Upload external event logs if available
+🌀 Process & System Context
+“Upload or describe the process or workflow in which the failure occurred.”
+• Upload process diagrams / flowcharts
+• Describe system dependencies
+• Was a change recently made to the process or system? (Yes/No + description)
+Optional Advanced Section: Risk/Compliance
+“Was this incident part of a regulated process (e.g. safety-critical, audit-tracked)?”
+• Select if this is a safety/environmental/compliance-critical system
+• Upload relevant regulations or procedures (PDF/DOC)
+
+
+Output
+
+
+
+✅ AI Output Prompt: RCA Results & Recommendations
+⚠ AI Root Cause Analysis Complete
+The system has analyzed all submitted data and identified key underlying causes, contributing factors, and actionable next steps. Please review the results below. You can download a full report or export recommendations for follow-up.
+🔍 1. Primary Root Cause(s)
+“Based on the analysis, the following root cause(s) have been identified with supporting evidence and confidence ratings.”
+
+
+
+
+
+
+
+
+
+Click each root cause for full explanation and visual trace.
+🧾 2. Causal Chain Analysis
+“Below is the chain of events and contributing factors that led to the incident.”
+📉 Timeline Visualization
+📌 Causal Pathway:
+UI Change → No Operator Retraining → Misoperation → System Override Failure → Equipment Shutdown
+📄 View detailed causal tree + annotated log excerpts
+🛠 3. Recommended Actions (CAPA)
+“Suggested corrective and preventive actions to avoid recurrence, prioritized for implementation.”
+
+
+
+
+
+
+
+
+📎 Export tasks to CMMS or project system | ✅ Send to Team Leads
+📘 4. Supporting Documentation
+“Relevant data used for this analysis is available below.”
+• 📂 Uploaded Incident Report
+• 🧾 Maintenance logs (3 entries analyzed)
+• 🧠 Interview: Operator A (with tags)
+• 📈 System event log (CSV, 312 rows processed)
+• 🖼️ Uploaded image: Damaged control panel
+📤 Download Full RCA Report (PDF / DOCX)
+📊 5. Optional Risk/Trend Insights
+“Related past incidents and systemic trends detected (if any).”
+• Similar incident 3 months ago linked to operator training gap
+• Recommend initiating a monthly anomaly trend review
+🔚 Final Call-to-Action
+✅ Would you like to save this RCA report, assign actions, or start a new analysis?
+• 🔒 Save Report
+• 📤 Email Findings
+• ✅ Create RCA Follow-up Plan
+• 🔁 Start New Analysis
+Developer Handoff Summary
+• This output should be modular and pulled from the AI engine’s structured result package (JSON, for example).
+• Visual components like causal trees, timeline viewers, and interactive evidence panels should be part of the UI/UX.
+• Ensure every piece of output includes traceability to source data (logs, reports, interviews).
+• Export options (PDF, DOCX, JSON, or integration with CMMS/workflow tools) should be built in.
+
